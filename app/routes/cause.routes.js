@@ -3,6 +3,7 @@ const ObjectID = require('mongodb').ObjectID;
 const Cause = require('../models/cause.model');
 const Donation = require('../models/donation.model');
 const User = require('../models/user.model');
+const _ = require('lodash');
 
 module.exports = function (app, db) {
 
@@ -54,6 +55,7 @@ module.exports = function (app, db) {
   app.put('/causes/donate/:id', (req, res) => {
 
     let cache = {};
+    req.body.amount = parseFloat(req.body.amount);
 
     // update user profile
     User.findById(req.body.user_id, (err, user) => {
@@ -61,11 +63,11 @@ module.exports = function (app, db) {
         res.send(err);
 
       // validate amount
-      if (user.amount < req.body.amount)
+      if (user.points < req.body.amount)
         res.status(400).json({ message: "Exceeded Amount" });
 
       // update user points | Async  
-      user.amount = user.amount - req.body.amount;
+      user.points = user.points - req.body.amount;
       user.total_donations += req.body.amount;
       user.save((err, data) => {
         if (err)
@@ -114,4 +116,9 @@ module.exports = function (app, db) {
     }
   });
 
+  // add user id to watched_by array | input --> user id and cause id
+
+  // remove user id from the wathced_by array | input --> user id and cause id
+
+  // https://lodash.com/docs/4.17.4#differenceBy
 };
