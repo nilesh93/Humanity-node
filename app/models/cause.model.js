@@ -8,5 +8,7 @@ module.exports = mongoose.model('Cause', new Schema({
     img: String,
     target: Number,
     date_created: { type: Date, default: Date.now },
-    recieved: { type: Number, default: 0 }
+    recieved: { type: Number, default: 0 },
+    watching: { type: Number, default: 0 },
+    watched_by: []
 }));

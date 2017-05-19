@@ -11,6 +11,7 @@ module.exports = function (app, db) {
   // list
   // Returns only active advertisements
   // TODO: Add pagintation
+  // TODO: filter expired stuff
   app.get('/advertisements', (req, res) => {
     Advertisement.find()
       .$where('this.views < this.max_views')
@@ -24,14 +25,48 @@ module.exports = function (app, db) {
 
   // view
   app.get('/advertisements/view/:id', (req, res) => {
-    const id = req.params.id;
+
+
     Advertisement.findById(req.params.id)
       .populate('_company')
       .exec((err, advertisement) => {
         if (err)
           res.send(err);
 
-        res.json(advertisement);
+
+        User.findById(req.query.user_id, (err, user) => {
+          if (err)
+            res.send(err);
+
+          if (!user)
+            res.status(400).json({ message: 'unauthorized user' });
+
+          // remove expired advertisements
+          user.advertisements_pending = _.reject(user.advertisements_pending, (o) => {
+
+            let expire = moment(o.expire_date);
+            let current = moment();
+
+            return (current.diff(expire, 'seconds') > 0);
+          }); // true ones will be rejected
+
+          // check whether advertisements available
+          let available_adv = _.find(user.advertisements_pending, (o) => {
+            return o._advertisement == req.params.id;
+          });
+
+          console.log(available_adv);
+          let avb = {};
+
+          if (!available_adv) {
+            avb.status = true;
+            avb.available_in = new Date();
+          } else {
+            avb.status = false;
+            avb.available_in = available_adv.expire_date;
+          }
+          res.json({ add: advertisement, availability: avb });
+        });
       });
   });
 
@@ -44,7 +79,8 @@ module.exports = function (app, db) {
       expiration_date: req.body.expiration_date,
       max_views: req.body.max_views,
       price_per_view: req.body.price_per_view,
-      _company: req.body._company
+      _company: req.body._company,
+      video_url: req.body.video_url
     });
 
     advertisement.save((err, data) => {
@@ -61,19 +97,24 @@ module.exports = function (app, db) {
   // update view count when a user watches an advertisemnt and update users when necessary
   app.put('/advertisements/view_count/:id', (req, res) => {
     let cache = {};
+    let status = false;
 
     Advertisement.findById(req.params.id, (err, advertisement) => {
       if (err)
-        res.send(err)
+        res.send(err);
 
       advertisement.total_views = advertisement.total_views + 1;
 
       // check whether user has the correct timeout
       User.findById(req.body.id, (err, user) => {
+        if (err)
+          res.send(err);
 
         // remove expired advertisements
-        user.advertisements_pending = _.reject(user.advertisements_pending, (o) => {
 
+
+        user.advertisements_pending = _.reject(user.advertisements_pending, (o) => {
+          console.log(o);
           let expire = moment(o.expire_date);
           let current = moment();
 
@@ -85,16 +126,17 @@ module.exports = function (app, db) {
           return o._advertisement == req.params.id;
         });
 
-        if (available_adv && available_adv.length > 0) {
+        if (!available_adv) {
           advertisement.views = advertisement.views + 1;
           user.points += advertisement.price_per_view;
           user.total_points += advertisement.price_per_view;
+          status = true;
 
           // update pending advertisements for user
           user.advertisements_pending.push({
             _advertisement: req.params.id,
-            expire_date: moment().add(advertisement.expiration_buffer, 'seconds')
-          })
+            expire_date: moment().add(advertisement.expiration_buffer, 'seconds').toDate()
+          });
         }
 
         // save advertisement
@@ -120,7 +162,8 @@ module.exports = function (app, db) {
         res.json({
           message: "advertisement view Incremented and user points updated",
           advertisement: cache.advertisement,
-          user: cache.user
+          user: cache.user,
+          status: status
         });
     }
   });
