@@ -116,43 +116,59 @@ module.exports = function(app, db) {
         }
     });
 
-    //watch
-    app.put('/causes/watch:id', (req, res) => {
-        user_id = req.body.user_id;
-        Cause.findById(req.params.id, (err, cause) => {
+
+
+    // watch
+    //  @params cause_id , user_id
+    app.put('/causes/watch/:cause_id', (req, res) => {
+        let cause_id = req.params.cause_id;
+        let user_id = req.body.user_id;
+        //cause object
+        Cause.findById(cause_id, (err, cause) => {
             if (err)
                 res.send(err);
-            cause.watched_by.push(user_id);
+
+            if (cause.watched_by.indexOf(user_id) === -1) {
+                cause.watched_by.push(user_id);
+            }
+
             cause.save((err, data) => {
                 if (err)
                     res.send(err);
-                cache.cause = data;
-                successCallback();
+                res.json({
+                    message: "Success!",
+                    data: data
+                });
             });
+
         });
+
 
     });
     //unwatch
-    app.put('/causes/unwatch:id', (req, res) => {
+    app.put('/causes/unwatch/:id', (req, res) => {
+
         user_id = req.body.user_id;
-        i = watched_by.indexOf(user_id);
-        console.log(i);
         Cause.findById(req.params.id, (err, cause) => {
             if (err)
                 res.send(err);
-            if (i != -1) {
+            let i = cause.watched_by.indexOf(user_id);
+
+            if (i !== -1) {
                 cause.watched_by.splice(i, 1);
             }
             cause.save((err, data) => {
                 if (err)
                     res.send(err);
-                cache.cause = data;
-                successCallback();
+                res.json({
+                    message: "Success!",
+                    data: data
+                });
             });
         });
 
     });
 
 
-    // https://lodash.com/docs/4.17.4#differenceBy
+
 };
