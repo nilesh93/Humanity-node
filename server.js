@@ -10,7 +10,7 @@ const fs = require('fs');
 var cors = require('cors');
 
 const app = express();
-const port = 3000;
+const port = require('./config/db').port;
 
 const httpsOptions = {
     key: fs.readFileSync('./key.pem'),
