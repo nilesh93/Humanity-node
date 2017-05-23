@@ -4,18 +4,22 @@ const Cause = require('../models/cause.model');
 const Donation = require('../models/donation.model');
 const User = require('../models/user.model');
 const _ = require('lodash');
+const CONFIG = require('../../config/db');
 
 module.exports = function (app, db) {
 
   // get
   app.get('/causes', (req, res) => {
-    Cause.find()
-      .$where('this.recieved < this.target')
-      .exec((err, causes) => {
+    Cause.paginate({
+      $where: 'this.recieved < this.target'
+    }, {
+        limit: CONFIG.paginate,
+        page: req.query.page || 1
+      }, (err, causes) => {
         if (err)
           res.send(err);
         res.json({ data: causes });
-      });
+      })
   });
 
   // view

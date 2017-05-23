@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const mongoosePaginate = require('mongoose-paginate');
 
 let Schema = mongoose.Schema;
 
@@ -13,4 +14,5 @@ module.exports = mongoose.model('User', new Schema({
     facebook: { type: String, default: null },
     google: { type: String, default: null },
     advertisements_pending: []
-}));
+})
+    .plugin(mongoosePaginate));

@@ -16,6 +16,7 @@
     "moment": "^2.18.1",
     "mongodb": "^2.2.26",
     "mongoose": "^4.9.9",
+    "mongoose-paginate": "^5.0.3",
     "morgan": "^1.8.1"
   },
   "devDependencies": {

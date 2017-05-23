@@ -4,19 +4,24 @@ const Advertisement = require('../models/advertisement.model');
 const User = require('../models/user.model');
 const _ = require('lodash');
 const moment = require('moment');
-
+const CONFIG = require('../../config/db');
 
 module.exports = function (app, db) {
 
   // list
   // Returns only active advertisements
-  // TODO: Add pagintation
-  // TODO: filter expired stuff
   app.get('/advertisements', (req, res) => {
-    Advertisement.find()
-      .$where('this.views < this.max_views')
-      .populate('_company')
-      .exec((err, advertisements) => {
+    Advertisement.paginate({
+      $where: function () {
+        return ((this.views < this.max_views)
+          && this._company);
+      },
+      expiration_date: { $gte: Date.now() }
+    }, {
+        populate: '_company',
+        page: req.query.page || 1,
+        limit: CONFIG.paginate
+      }, (err, advertisements) => {
         if (err)
           res.send(err);
         res.json({ data: advertisements });

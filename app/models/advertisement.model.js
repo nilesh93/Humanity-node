@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-
+const mongoosePaginate = require('mongoose-paginate');
 let Schema = mongoose.Schema;
 
 
@@ -15,4 +15,5 @@ module.exports = mongoose.model('Advertisement', new Schema({
     _company: { type: Schema.Types.ObjectId, ref: 'Company' },
     video_url: String,
     expiration_buffer: { type: Number, default: 360 } //this should be in seconds
-}));
+})
+    .plugin(mongoosePaginate));

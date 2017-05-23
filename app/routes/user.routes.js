@@ -2,6 +2,8 @@ const User = require('../models/user.model');
 const Donation = require('../models/donation.model');
 const moment = require('moment');
 const _ = require('lodash');
+const CONFIG = require('../../config/db');
+
 module.exports = function (app, db) {
 
   // save User
@@ -68,26 +70,31 @@ module.exports = function (app, db) {
 
   // get leaderboards
   app.get('/user/leaderboards', (req, res) => {
-    User.find()
-      .limit(10)
-      .sort({ total_donations: -1 })
-      .select({ name: 1, total_donations: 1, img: 1 })
-      .exec((err, users) => {
-        if (err)
-          res.send(err);
-        res.json(users);
-      });
+
+    User.paginate({}, {
+      sort: { total_donations: -1 },
+      select: { name: 1, total_donations: 1, img: 1 },
+      page: req.query.page || 1,
+      limit: CONFIG.paginate
+    }, (err, users) => {
+      if (err)
+        res.send(err);
+      res.json(users);
+    });
   });
 
 
   // get donations
   app.get('/user/donations/:id', (req, res) => {
-    Donation.find({
+    
+    Donation.paginate({
       _user: req.params.id
-    })
-      .populate('_cause')
-      .sort({ date: -1 })
-      .exec((err, donations) => {
+    }, {
+        populate: '_cause',
+        sort: { date: -1 },
+        page: req.query.page || 1,
+        limit: CONFIG.paginate
+      }, (err, donations) => {
         if (err)
           res.send(err);
         res.json(donations);
