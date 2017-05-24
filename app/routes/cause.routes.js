@@ -42,17 +42,7 @@ module.exports = function (app, db) {
     });
 
 
-    //post route
-    app.post('/causes', (req, res) => {
-        const cause = new Cause({
-            title: req.body.title,
-            description: req.body.description,
-            contact: req.body.contact,
-            img: req.body.img,
-            target: req.body.target
-        });
-    });
-
+ 
 
 
     //post route
