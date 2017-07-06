@@ -28,11 +28,7 @@ mongoose.connect(db.url);
 MongoClient.connect(db.url, (err, database) => {
     if (err) return console.log(err)
     require('./app/routes')(app, database);
-
-    // https.createServer(httpsOptions, app).listen(port, () => {
-    //     console.log('server running at ' + port)
-    // });
-
+    
     app.listen(port, () => {
         console.log('server running at ' + port)
     });

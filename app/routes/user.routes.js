@@ -86,7 +86,7 @@ module.exports = function (app, db) {
 
   // get donations
   app.get('/user/donations/:id', (req, res) => {
-    
+
     Donation.paginate({
       _user: req.params.id
     }, {
@@ -117,4 +117,16 @@ module.exports = function (app, db) {
         });
       });
   });
+
+
+  app.get('/user/all', (req, res) => {
+    User.find({}, (err, data) => {
+      if (err)
+        res.json(err);
+
+      res.json(data);
+    })
+  })
 };
+
+
